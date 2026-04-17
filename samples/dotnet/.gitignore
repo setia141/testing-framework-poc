@@ -1,0 +1,4 @@
+bin/
+obj/
+StrykerOutput/
+stryker-config.json
