@@ -58,6 +58,13 @@ Add inside `<build><plugins>`, scoped to those classes:
     <groupId>org.pitest</groupId>
     <artifactId>pitest-maven</artifactId>
     <version>1.15.3</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+    </dependencies>
     <configuration>
         <targetClasses>
             <param>com.example.ChangedClass1</param>
@@ -113,14 +120,37 @@ Revert: delete `stryker-config.json`
 
 ---
 
-### Node.js — stryker.config.json (do NOT modify package.json)
+### Node.js — package.json
 
-Auto-detect test runner from `devDependencies`:
-- Contains `jest` → testRunner: `"jest"`
-- Contains `mocha` → testRunner: `"mocha"`
-- Contains `jasmine` → testRunner: `"jasmine"`
+Auto-detect test runner from existing `devDependencies`:
+- Contains `jest` → `"@stryker-mutator/jest-runner"`
+- Contains `mocha` → `"@stryker-mutator/mocha-runner"`
+- Contains `jasmine` → `"@stryker-mutator/jasmine-runner"`
 
-Create `stryker.config.json`:
+Add to `devDependencies` temporarily:
+```json
+"@stryker-mutator/core": "^9.0.0",
+"@stryker-mutator/jest-runner": "^9.0.0"
+```
+
+Mark with comments above and below the added lines:
+```json
+{
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "MUTATION-TEST-START-@stryker-mutator/core": "^9.0.0",
+    "@stryker-mutator/core": "^9.0.0",
+    "@stryker-mutator/jest-runner": "^9.0.0",
+    "MUTATION-TEST-END": "remove"
+  }
+}
+```
+
+Actually — JSON has no comments. Instead, track the exact keys added so they can be removed. Add only these two keys:
+- `"@stryker-mutator/core"`
+- `"@stryker-mutator/<runner>"`
+
+Also create `stryker.config.json` temporarily:
 ```json
 {
   "testRunner": "<detected-runner>",
@@ -135,42 +165,59 @@ Create `stryker.config.json`:
 
 Run:
 ```bash
-npx stryker run
+npm install && npx stryker run
 ```
 
 Parse score from stdout line containing `Mutation score:`
 
-Revert: delete `stryker.config.json`
+Revert:
+1. Remove `@stryker-mutator/core` and `@stryker-mutator/<runner>` from `devDependencies` in `package.json`
+2. Delete `stryker.config.json`
+3. Run `npm install` to restore `package-lock.json`
 
 ---
 
-### Python — pyproject.toml or mutmut.ini
+### Python — pyproject.toml
 
 Build comma-separated list of changed file paths:
 `src/order_service.py,src/payment/processor.py`
 
-**If `pyproject.toml` exists**, append a temporary block:
+**If `pyproject.toml` exists**, add mutmut as a dev dependency and config temporarily:
 ```toml
 # MUTATION-TEST-START
 [tool.mutmut]
 paths_to_mutate = "src/order_service.py,src/payment/processor.py"
+
+[project.optional-dependencies]
+mutation = ["mutmut"]
 # MUTATION-TEST-END
 ```
 
-**Otherwise**, create `mutmut.ini`:
-```ini
-[mutmut]
-paths_to_mutate=src/order_service.py,src/payment/processor.py
+**If only `requirements*.txt` exists**, append to `requirements-dev.txt` (or create it):
+```
+# MUTATION-TEST-START
+mutmut
+# MUTATION-TEST-END
 ```
 
 Run:
 ```bash
-pip install mutmut -q && mutmut run && mutmut results
+pip install -e ".[mutation]" -q && mutmut run && mutmut results
+```
+
+Or if using requirements:
+```bash
+pip install -r requirements-dev.txt -q && mutmut run && mutmut results
 ```
 
 Parse score: count lines with `KILLED` vs total from `mutmut results` output.
 
-Revert: remove the `# MUTATION-TEST-START` ... `# MUTATION-TEST-END` block from `pyproject.toml`, or delete `mutmut.ini`
+Revert: remove the `# MUTATION-TEST-START` ... `# MUTATION-TEST-END` block from `pyproject.toml` or `requirements-dev.txt`
+
+**Windows note**: mutmut and cosmic-ray do not support Windows natively. On Windows, run via:
+- WSL: `wsl mutmut run && wsl mutmut results`
+- CI: use a Linux runner (GitHub Actions `ubuntu-latest`, Azure DevOps `ubuntu-22.04`)
+- Docker: `docker run --rm -v ${PWD}:/app -w /app python:3.13 bash -c "pip install mutmut -q && mutmut run && mutmut results"`
 
 ---
 
