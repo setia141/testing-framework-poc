@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git reset *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(mvn -version)",
+      "Bash(node -version)",
+      "Bash(dotnet --version)",
+      "Bash(npm --version)",
+      "Bash(mvn test-compile *)",
+      "Bash(npm install *)",
+      "Bash(npx stryker *)",
+      "Bash(pip install *)",
+      "Bash(cr-report session.sqlite --show-output)",
+      "Bash(cosmic-ray --version)",
+      "Bash(python -c ' *)",
+      "Bash(python *)",
+      "Bash(cosmic-ray init *)",
+      "Bash(cosmic-ray exec *)",
+      "Bash(cr-report session.sqlite)",
+      "Bash(docker info *)",
+      "Bash(docker run *)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run *)"
+    ]
+  }
+}

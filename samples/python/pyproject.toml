@@ -8,3 +8,11 @@ version = "1.0.0"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# MUTATION-TEST-START
+[project.optional-dependencies]
+mutation = ["mutmut", "pytest"]
+
+[tool.mutmut]
+paths_to_mutate = "src/order_service.py"
+# MUTATION-TEST-END
