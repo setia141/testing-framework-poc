@@ -27,3 +27,31 @@ test('free shipping for premium member', () => {
 test('free shipping for high total', () => {
     expect(isEligibleForFreeShipping(50, false)).toBe(true);
 });
+
+test('calculateTotal negative discount throws', () => {
+    expect(() => calculateTotal(10, 5, -1)).toThrow("Discount must be between 0 and 100");
+});
+
+test('calculateTotal discount over 100 throws', () => {
+    expect(() => calculateTotal(10, 5, 101)).toThrow("Discount must be between 0 and 100");
+});
+
+test('calculateTotal discount exactly 100 does not throw', () => {
+    expect(calculateTotal(10, 5, 100)).toBe(0);
+});
+
+test('calculateTotal invalid quantity error message', () => {
+    expect(() => calculateTotal(10, 0, 0)).toThrow("Quantity must be positive");
+});
+
+test('classifyOrder medium lower boundary', () => {
+    expect(classifyOrder(100)).toBe('MEDIUM');
+});
+
+test('classifyOrder medium upper boundary', () => {
+    expect(classifyOrder(999)).toBe('MEDIUM');
+});
+
+test('no free shipping for low total non-premium', () => {
+    expect(isEligibleForFreeShipping(10, false)).toBe(false);
+});
